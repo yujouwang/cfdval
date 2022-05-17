@@ -1,8 +1,10 @@
+""" 
+This script describe how data is stored
+"""
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from valcode.manchester import ManchesterHorizontalLine, ManchesterVerticalLine
 
 class MeanVelocity(ABC):
     @property
@@ -25,6 +27,7 @@ class MeanVelocity(ABC):
     def W(self):
         pass
 
+
 class MeanTemperature(ABC):
     @property
     @abstractmethod
@@ -44,32 +47,7 @@ class ReynoldsStress(ABC):
 
     @property
     @abstractmethod
-    def uu(self):
-        pass
-
-    @property
-    @abstractmethod
-    def vv(self):
-        pass
-
-    @property
-    @abstractmethod
-    def ww(self):
-        pass
-
-    @property
-    @abstractmethod
-    def uv(self):
-        pass
-
-    @property
-    @abstractmethod
-    def uw(self):
-        pass
-
-    @property
-    @abstractmethod
-    def vw(self):
+    def tke(self):
         pass
 
 
@@ -88,7 +66,7 @@ class VerticalLine(ABC):
 
     @property
     @abstractmethod
-    def Uprime(self):
+    def tke(self):
         pass
 
     @property

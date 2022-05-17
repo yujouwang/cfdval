@@ -80,7 +80,10 @@ class MeanTemperatureManchester(MeanTemperature):
 
 class ReynoldsStressManchester(ReynoldsStress):
     def __init__(self, data_folder: str, dir:str, loc: float):
-        self._coord, self._uu, self._vv, self._ww, self._uv, self._uw, self._vw = self._read_data()
+        self.data_folder = data_folder
+        self.dir = dir
+        self.loc = loc
+        self._coord, self._tke = self._read_data()
     
     def _read_data(self):
         file_path = self._file_path()
@@ -89,10 +92,8 @@ class ReynoldsStressManchester(ReynoldsStress):
         uu: np.ndarray = data[1].values
         vv: np.ndarray = data[2].values
         ww: np.ndarray = data[3].values
-        uv: np.ndarray = data[4].values
-        uw: np.ndarray = data[5].values
-        vw: np.ndarray = data[6].values
-        return coord, uu, vv, ww, uv, uw, vw
+        tke = uu + vv + ww
+        return coord, tke
         
     def _file_path(self):
         loc_map = {
@@ -132,6 +133,12 @@ class ReynoldsStressManchester(ReynoldsStress):
     @property
     def vw(self):
         return self._vw
+    
+    @property 
+    def tke(self):
+        return self._uu + self._vv + self._ww
+
+    
 
 
 class VerticalLineManchester(VerticalLine):
@@ -140,7 +147,7 @@ class VerticalLineManchester(VerticalLine):
         self.loc = loc
         self.dir = 'V'
         self._Umean =  MeanVelocityManchester(self.data_folder, self.dir, self.loc)
-        self._Uprime = ReynoldsStressManchester(self.data_folder, self.dir, self.loc)
+        self._tke = ReynoldsStressManchester(self.data_folder, self.dir, self.loc)
         self._Tmean = MeanTemperatureManchester(self.data_folder, self.dir, self.loc)
     
     @property
@@ -148,8 +155,8 @@ class VerticalLineManchester(VerticalLine):
         return self._Umean
         
     @property
-    def Uprime(self):
-        return self._Uprime
+    def tke(self):
+        return self._tke
 
     @property
     def Tmean(self):
@@ -162,6 +169,10 @@ class HorizontalLineManchester(HorizontalLine):
         self.loc = loc
         self.dir = 'H'
         self._Umean =  MeanVelocityManchester(self.data_folder, self.dir, self.loc)
+
+    @property
+    def Umean(self):
+        return self._Umean
     
 
 class ManchesterLineData(LineData):
