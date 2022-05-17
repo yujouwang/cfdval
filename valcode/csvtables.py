@@ -3,6 +3,7 @@ This module contains tools for parsing the data from starccm+ table outputs
 """
 import pandas as pd
 from pathlib import Path
+from dataclasses import dataclass
 import numpy as np
 from tqdm import tqdm
 import os
@@ -13,12 +14,14 @@ sns.set_theme()
 import os
 import glob
 import re
-
+from config import *
 
 D_B = 21E-3
 X_LOCS_STAR = [1, 2, -2, -0.5, -7, 4.5, -4.5]
 X_LOCS = [0.021, 0.042, -0.042, 0.084, -0.084, -0.0105, -0.147, 0.0945, -0.0945]
 DIRS =['H', 'V']
+
+
 
 def natural_sort(l):
     convert = lambda text: int(text) if text.isdigit() else text.lower()
@@ -33,6 +36,7 @@ def find_probe_index(x, y, z, data, tolerance=1E-6):
     index = data_f.index
     assert len(index) == 1, f"more than one data for x,y,z= ({x,y,z}) is found"
     return index[0]
+
 
 def convert_saved_name(name):
     assert type(name) == str, "The name to be converted must be str"
@@ -68,7 +72,6 @@ class TableProbes:
         self.probe_locs = probe_locs
         self.files = search_files(directory=data_dir, file_kw=f'{table_name}*.csv', N_files=N_files)
         self.indices, self.columns = self._init_probes()
-    
 
     def _init_probes(self):
         data = pd.read_csv(os.path.join(self.data_dir, self.files[0]))
@@ -81,6 +84,7 @@ class TableProbes:
         return indices, columns
 
     def parse_all_columns(self, overwrite=False):
+        """ Parse the data into a dict and pickle the dictionary"""
         # Check if the file exists
         save_name = convert_saved_name(self.columns[0])
         save_to = os.path.join(self.save_to, '%s.pkl' % save_name)
@@ -90,7 +94,7 @@ class TableProbes:
 
         else:
             N_cols = len(self.columns)
-            data_holder = [{','.join(key): [] for key in self.probe_locs}
+            data_holder = [{','.join(loc): [] for loc in self.probe_locs}
                            for i in range(N_cols)]
 
             # For each file, get the data

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from manchester import *
-import scipy
+from scipy.fft import fft, fftfreq
 sns.set_theme()
 sns.set_style("whitegrid")
 
@@ -147,7 +147,8 @@ class InstDataPlot:
             
         root = r'F:\LES_Manchester\UoM_TJ_LES-20211013T183109Z-001\UoM_TJ_LES'
         working_dir = os.path.join(root, 'probes')
-        les = ManchesterProbes(working_dir, self.probe, save_to='test_LES')
+        save_to = r'D:\Dropbox (MIT)\ResearchProjects\2020_CFD\DataProcessing\cfd_1_ManchesterLESVal/data'
+        les = ManchesterProbes(working_dir, save_to, self.probe)
         time_les, data_les = les.get_probe_data(self.probe, data_type)
         logging.debug("Success in getting the les data")
         
@@ -165,12 +166,18 @@ class InstDataPlot:
     
     def _init_stc_data(self):
         self.dt_stc = 0.00375
-        working_dir = r'F:\CFD_Manchester\1_FullModel\Struct\1p5mm_v2_ManchesterInlet\Probes'
+        data_dir = r'F:\project1_Manchester\CFD_Manchester\1_FullModel\Struct\1p5mm_v2_ManchesterInlet\Probes'
         table_name = 'probes_table'
+        save_to = r'D:\Dropbox (MIT)\ResearchProjects\2020_CFD\DataProcessing\cfd_1_ManchesterLESVal/data/parsed_CFD_tables_v2'
 
         # Initiate 
-        structs = TableProbes(working_dir, table_name, probe_locs=probe_locations,
-                    file_start_from=3000)
+        structs = TableProbes(
+            data_dir = data_dir, 
+            save_to = save_to,
+            table_name =table_name, 
+            probe_locs=probe_locations,
+            N_files=3000
+            )
         data_stc = structs.read_file(column=self.column, probe=self.probe)
         time_stc =self.dt_stc * np.arange(len(data_stc))
         
@@ -188,8 +195,10 @@ class InstDataPlot:
         """
         # 2-side FFT
         N = len(x)
-        xdft = scipy.fft.fft(x)
-        freq = scipy.fft.fftfreq(N, dt_s)
+        # xdft = scipy.fft.fft(x)
+        # freq = scipy.fft.fftfreq(N, dt_s)
+        xdft = fft(x)
+        freq =fftfreq(N, dt_s)
 
         # convert 2-side to 1-side
         if N % 2 == 0:
@@ -335,9 +344,10 @@ def plot_vertical_summary(data_type, xlim=None, scaling_fac=8, shift=288, title=
         Z_les, mean_les = get_line_data(x_loc, direction='V', data_type=data_type)
 
         # Struct data
-        working_dir = r'F:\CFD_Manchester\1_FullModel\Struct\1p5mm_v2_ManchesterInlet\Lines'
         table_name = 'Lines_table'
-        l_stc = TableLines(working_dir, table_name)
+        data_dir = r'F:\project1_Manchester\CFD_Manchester\1_FullModel\Struct\1p5mm_v2_ManchesterInlet\Lines'
+        save_to = r'D:\Dropbox (MIT)\ResearchProjects\2020_CFD\DataProcessing\cfd_1_ManchesterLESVal/data'
+        l_stc = TableLines(data_dir, save_to, table_name)
         mean_stc, std = l_stc.get_lineprobe(column=column, x_loc=x_loc, direction='V')
         Z, _ = l_stc.get_lineprobe(column="Z (m)", x_loc=x_loc, direction='V')
 
