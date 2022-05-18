@@ -7,6 +7,8 @@ import pandas as pd
 
 from valcode.datastructure import MeanVelocity, MeanTemperature, ReynoldsStress, LineData, HorizontalLine, VerticalLine
 
+T_h_les = 303
+T_c_les = 288
 
 class MeanVelocityManchester(MeanVelocity):
     def __init__(self, data_folder: str, dir: str, loc: float):
@@ -60,6 +62,7 @@ class MeanTemperatureManchester(MeanTemperature):
         data = pd.read_csv(file_path)
         coord: np.ndarray = data['Points:2'].values if self.dir =='H' else data['Points:1'].values
         T = data['TMean'].values
+        T = (T - T_c_les) / (T_h_les)
         return coord, T
 
     def _file_path(self):
@@ -110,36 +113,11 @@ class ReynoldsStressManchester(ReynoldsStress):
     def coord(self):
         return self._coord
 
-    @property
-    def uu(self):
-        return self._uu
-
-    @property
-    def vv(self):
-        return self._vv
-
-    @property
-    def ww(self):
-        return self._ww
-
-    @property
-    def uv(self):
-        return self._uv
-
-    @property
-    def uw(self):
-        return self._uw
-
-    @property
-    def vw(self):
-        return self._vw
-    
     @property 
     def tke(self):
-        return self._uu + self._vv + self._ww
+        return self._tke
 
-    
-
+# ========= Lines ======================
 
 class VerticalLineManchester(VerticalLine):
     def __init__(self, data_folder: str, loc: float):

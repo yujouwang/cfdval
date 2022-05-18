@@ -27,20 +27,18 @@ def line():
     x_locs = [-7, -4.5, -2, 1, 2, 4.5]
     les_line_folder = r'E:\LES_Manchester\UoM_TJ_LES-20211013T183109Z-001\UoM_TJ_LES\lines'
     struct_line_folder = r'E:\project1_Manchester\CFD_Manchester\1_FullModel\Struct\1p5mm_v2_ManchesterInlet\Lines'
+    cubic_folder = r'E:\project1_Manchester\CFD_Manchester\1_FullModel\Cubic'
     loc = x_locs[0]
-    mscs = ManchesterLineData(les_line_folder, loc=loc)
-    coord = mscs.vertical.Umean.coord
-    Umean = mscs.vertical.Umean.U
 
-    struct = MyLineData(
-        struct_line_folder, 
+    cubic = MyLineData(
+        cubic_folder, 
         loc, 
-        f_read_Umean=read_struct_Umean, 
-        f_read_tke=read_struct_tke, 
-        f_read_Tmean=read_struct_Tmean)
+        f_read_Umean=read_cubic_Umean, 
+        f_read_tke=read_cubic_tke, 
+        f_read_Tmean=read_cubic_Tmean)
 
-    coord = struct.vertical.Umean.coord
-    Umean = struct.vertical.Umean.U
+    coord = cubic.vertical.Umean.coord
+    Umean = cubic.vertical.Umean.U
     print(coord)
 
 

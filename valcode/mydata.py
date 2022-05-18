@@ -18,19 +18,24 @@ ReadDataFunction =  Callable
 
 
 # =================================
+
+T_c_stc = 36.5 + 273
+T_h_stc = 95 + 273
+
 # Customize these functions to read from disk
 def extract_line(df: pd.DataFrame, direction: str, loc: float):
     if direction == 'V':
         output = df[(abs(df['X (m)'] - loc) < 1E-5) & (abs(df['Y (m)'])==0)]
-        assert len(output) <= 200
+        # assert len(output) <= 200, f"debug: dir: {direction}, loc:{loc}"
+        assert len(output) <= 205, f"{output}"
     elif direction =='H':
         output = df[(abs(df['X (m)'] - loc) <1E-5) & (abs(df['Z (m)'])==0)]
-        assert len(output) <= 200
+        assert len(output) <= 205, f"debug: dir: {direction}, loc:{loc}"
     else:
         raise ValueError(f"Check direction: {direction}, should be 'V' or 'H' ")
     return output
 
-def load_struct_mean_file(data_folder: str, direction: str, loc: float):
+def load_my_mean_file(data_folder: str, direction: str, loc: float):
     df = pd.read_csv(Path(data_folder) / 'mean.csv')
     x = df['X (m)']
     loc_in_m = 0.021 * loc
@@ -39,7 +44,7 @@ def load_struct_mean_file(data_folder: str, direction: str, loc: float):
     return data
 
 def read_struct_Umean(data_folder, direction, loc):
-    data = load_struct_mean_file(data_folder, direction, loc)
+    data = load_my_mean_file(data_folder, direction, loc)
 
     if direction == 'H':
         coord = data['Y (m)'].values
@@ -52,26 +57,20 @@ def read_struct_Umean(data_folder, direction, loc):
     return coord, U, V, W
 
 def read_cubic_Umean(data_folder, direction, loc):
-    # Specify direction 
-    direction_name = 'horizontal' if direction == 'H' else 'vertical'
-    data = pd.read_csv(Path(data_folder) / f'SS_Velocity_{direction_name}.csv')
+    data = load_my_mean_file(data_folder, direction, loc)
+    if direction == 'H':
+        coord = data['Y (m)'].values
+    else:
+        coord = data['Z (m)'].values
 
-    # Read 
-    probe_name = f'line_{loc}Db_H: Velocity[i] (m/s)' if direction=='H' else f'line_{loc}Db_V: Velocity[i] (m/s)'
-    coord_name = f'line_{loc}Db_H: Position[Y] (m)' if direction=='H' else f'line_{loc}Db_V: Position[Z] (m)'
-
-    coord = data[coord_name].values
-    U = data[probe_name].values
-    # V = np.ones(len(U)) * np.nan 
-    # W = np.ones(len(U)) * np.nan 
-    V = np.zeros(len(U))
-    W = np.zeros(len(U))
-
+    U = data['Mean of Velocity[i] (m/s)'].values
+    V = data['Mean of Velocity[j] (m/s)'].values
+    W = data['Mean of Velocity[k] (m/s)'].values
     return coord, U, V, W
 
 
 def read_struct_tke(data_folder: str, direction: str, loc: float):
-    data = load_struct_mean_file(data_folder, direction, loc)
+    data = load_my_mean_file(data_folder, direction, loc)
     if direction == 'H':
         coord = data['Y (m)'].values
     else:
@@ -80,24 +79,34 @@ def read_struct_tke(data_folder: str, direction: str, loc: float):
     return coord, tke
 
 def read_cubic_tke(data_folder, direction, loc):
-    print("Cubic doesn't have TKE data. ")
-    coord = [0]
-    tke = [0]
-    return coord, tke
-
-def read_struct_Tmean(data_folder: str, direction:str, loc: float):
-    data = load_struct_mean_file(data_folder, direction, loc)
+    data = load_my_mean_file(data_folder, direction, loc)
     if direction == 'H':
         coord = data['Y (m)'].values
     else:
         coord = data['Z (m)'].values
-    temperature = data['Temperature (K)'].values
+
+    tke = data['Mean of Turbulent Kinetic Energy (J/kg)'].values
+    return coord, tke
+
+def read_struct_Tmean(data_folder: str, direction:str, loc: float):
+    data = load_my_mean_file(data_folder, direction, loc)
+    if direction == 'H':
+        coord = data['Y (m)'].values
+    else:
+        coord = data['Z (m)'].values
+    temperature = data['Temperature (K)'].values 
+    temperature = (temperature - T_c_stc) / (T_h_stc - T_c_stc)
     return coord, temperature
 
 def read_cubic_Tmean(data_folder, direction, loc):
-    print("Cubic doesn't have Temperature data")
-    coord = [0]
-    temperature = [0]
+    data = load_my_mean_file(data_folder, direction, loc)
+    if direction == 'H':
+        coord = data['Y (m)'].values
+    else:
+        coord = data['Z (m)'].values
+
+    temperature = data['Mean of Temperature (K)'].values
+    temperature = (temperature - T_c_stc) / (T_h_stc - T_c_stc)
     return coord, temperature
 
 # =================================
@@ -138,7 +147,7 @@ class MyMeanTemperature(MeanTemperature):
     
     @property
     def T(self):
-        return self._T
+        return self._T -273.15
 
 
 class MyReynoldsStress(ReynoldsStress):
